@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnoreTracker Pro</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-screen="home">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                <span>Home</span>
+            </button>
+            <button class="nav-btn" data-screen="monitor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                </svg>
+                <span>Monitor</span>
+            </button>
+            <button class="nav-btn" data-screen="results">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                </svg>
+                <span>Results</span>
+            </button>
+            <button class="nav-btn" data-screen="history">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                </svg>
+                <span>History</span>
+            </button>
+            <button class="nav-btn" data-screen="settings">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.43-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                </svg>
+                <span>Settings</span>
+            </button>
+        </nav>
+
+        <!-- Home Screen -->
+        <div class="screen active" id="home-screen">
+            <header class="screen-header">
+                <h1>SnoreTracker Pro</h1>
+                <div class="header-date" id="current-date"></div>
+            </header>
+            
+            <div class="content-container">
+                <div class="welcome-card card">
+                    <div class="card__body">
+                        <h2>Good Morning!</h2>
+                        <p>Ready to monitor your sleep patterns?</p>
+                        <button class="btn btn--primary btn--full-width start-monitoring-btn">
+                            Start New Session
+                        </button>
+                    </div>
+                </div>
+
+                <div class="quick-stats-grid">
+                    <div class="stat-card card">
+                        <div class="card__body">
+                            <div class="stat-number" id="avg-score">85</div>
+                            <div class="stat-label">Avg Score</div>
+                        </div>
+                    </div>
+                    <div class="stat-card card">
+                        <div class="card__body">
+                            <div class="stat-number" id="total-sessions">3</div>
+                            <div class="stat-label">Sessions</div>
+                        </div>
+                    </div>
+                    <div class="stat-card card">
+                        <div class="card__body">
+                            <div class="stat-number" id="last-score">73</div>
+                            <div class="stat-label">Last Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="recent-sessions">
+                    <h3>Recent Sessions</h3>
+                    <div id="recent-sessions-list"></div>
+                </div>
+
+                <div class="features-section">
+                    <h3>App Features</h3>
+                    <div class="features-grid" id="features-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Screen -->
+        <div class="screen" id="monitor-screen">
+            <header class="screen-header">
+                <h1>Sleep Monitoring</h1>
+                <div class="monitoring-status" id="monitoring-status">Ready to Start</div>
+            </header>
+            
+            <div class="content-container">
+                <div class="monitoring-card card">
+                    <div class="card__body">
+                        <div class="waveform-container">
+                            <canvas id="waveform-canvas" width="300" height="100"></canvas>
+                        </div>
+                        
+                        <div class="monitoring-controls">
+                            <button class="btn btn--primary monitor-btn" id="monitor-toggle">
+                                <span class="btn-text">START MONITORING</span>
+                            </button>
+                        </div>
+                        
+                        <div class="session-info">
+                            <div class="session-timer" id="session-timer">00:00:00</div>
+                            <div class="volume-indicator">
+                                <div class="volume-label">Volume Level</div>
+                                <div class="volume-bar">
+                                    <div class="volume-fill" id="volume-fill"></div>
+                                </div>
+                            </div>
+                            <div class="snore-indicator" id="snore-indicator">
+                                <div class="indicator-light"></div>
+                                <span>Listening for snoring...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="monitoring-tips card">
+                    <div class="card__body">
+                        <h4>Monitoring Tips</h4>
+                        <ul>
+                            <li>Place your phone on the nightstand</li>
+                            <li>Keep the app running all night</li>
+                            <li>Ensure a quiet environment</li>
+                            <li>Keep your phone plugged in</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="screen" id="results-screen">
+            <header class="screen-header">
+                <h1>Session Results</h1>
+                <div class="session-date" id="results-date"></div>
+            </header>
+            
+            <div class="content-container">
+                <div class="snore-score-card card">
+                    <div class="card__body">
+                        <div class="score-display">
+                            <div class="score-circle">
+                                <div class="score-number" id="session-score">85</div>
+                                <div class="score-label">Snore Score</div>
+                            </div>
+                        </div>
+                        <div class="score-description" id="score-description">Good sleep quality</div>
+                    </div>
+                </div>
+
+                <div class="results-grid">
+                    <div class="result-item card">
+                        <div class="card__body">
+                            <div class="result-value" id="session-duration">8h 30m</div>
+                            <div class="result-label">Total Time</div>
+                        </div>
+                    </div>
+                    <div class="result-item card">
+                        <div class="card__body">
+                            <div class="result-value" id="snore-events">12</div>
+                            <div class="result-label">Snore Events</div>
+                        </div>
+                    </div>
+                    <div class="result-item card">
+                        <div class="card__body">
+                            <div class="result-value" id="snore-time">45m</div>
+                            <div class="result-label">Total Snoring</div>
+                        </div>
+                    </div>
+                    <div class="result-item card">
+                        <div class="card__body">
+                            <div class="result-value" id="intensity-level">Moderate</div>
+                            <div class="result-label">Intensity</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-chart card">
+                    <div class="card__body">
+                        <h4>Snoring Timeline</h4>
+                        <canvas id="timeline-chart" width="350" height="150"></canvas>
+                    </div>
+                </div>
+
+                <div class="recommendations card">
+                    <div class="card__body">
+                        <h4>Recommendations</h4>
+                        <div id="recommendations-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Screen -->
+        <div class="screen" id="history-screen">
+            <header class="screen-header">
+                <h1>Sleep History</h1>
+                <div class="history-filter">
+                    <select class="form-control" id="history-filter">
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="all">All Time</option>
+                    </select>
+                </div>
+            </header>
+            
+            <div class="content-container">
+                <div class="trends-chart card">
+                    <div class="card__body">
+                        <h4>Weekly Trends</h4>
+                        <canvas id="trends-chart" width="350" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="history-list">
+                    <h4>Session History</h4>
+                    <div id="history-sessions"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div class="screen" id="settings-screen">
+            <header class="screen-header">
+                <h1>Settings</h1>
+            </header>
+            
+            <div class="content-container">
+                <div class="settings-section card">
+                    <div class="card__body">
+                        <h4>Detection Settings</h4>
+                        <div class="form-group">
+                            <label class="form-label" for="sensitivity">Detection Sensitivity</label>
+                            <input type="range" class="form-control" id="sensitivity" min="1" max="10" value="5">
+                            <div class="range-labels">
+                                <span>Low</span>
+                                <span>High</span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="min-duration">Minimum Snore Duration (seconds)</label>
+                            <input type="number" class="form-control" id="min-duration" value="3" min="1" max="10">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section card">
+                    <div class="card__body">
+                        <h4>Data Management</h4>
+                        <button class="btn btn--secondary btn--full-width" id="export-data">Export Data</button>
+                        <button class="btn btn--outline btn--full-width" id="clear-data">Clear All Data</button>
+                    </div>
+                </div>
+
+                <div class="settings-section card">
+                    <div class="card__body">
+                        <h4>About</h4>
+                        <p>SnoreTracker Pro v1.0</p>
+                        <p>Professional sleep monitoring for better health</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permission Modal -->
+        <div class="modal" id="permission-modal">
+            <div class="modal-content">
+                <h3>Microphone Access Required</h3>
+                <p>SnoreTracker Pro needs access to your microphone to monitor your sleep patterns and detect snoring.</p>
+                <p>Your audio data is processed locally and never shared.</p>
+                <div class="modal-buttons">
+                    <button class="btn btn--secondary" id="deny-permission">Cancel</button>
+                    <button class="btn btn--primary" id="grant-permission">Allow Access</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
