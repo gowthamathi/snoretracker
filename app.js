@@ -107,6 +107,8 @@ class SnoreTrackerApp {
         this.updateCurrentDate();
         this.populateHomeScreen();
         this.renderFeatures();
+        // Check microphone permission status on load
+        this.checkMicrophonePermission();
         // Show initial screen
         this.showScreen('home');
     }
@@ -454,6 +456,15 @@ class SnoreTrackerApp {
             cancelAnimationFrame(this.animationId);
         }
 
+        // Clean up audio resources
+        if (this.audioContext && this.audioContext.state !== 'closed') {
+            this.audioContext.close();
+        }
+        
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+        }
+
         // Process and save session
         this.processSession();
         
@@ -477,15 +488,84 @@ class SnoreTrackerApp {
         }
     }
 
+    async checkMicrophonePermission() {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+            this.updateMicrophoneStatus(permissionStatus.state);
+            
+            if (permissionStatus.state === 'granted') {
+                // Pre-initialize stream if permission already granted
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    this.updateMicrophoneStatus('granted', 'Microphone ready');
+                } catch (error) {
+                    console.log('Could not pre-initialize microphone stream:', error);
+                    this.updateMicrophoneStatus('denied', 'Microphone unavailable');
+                }
+            }
+            
+            // Listen for permission changes
+            permissionStatus.onchange = () => {
+                this.updateMicrophoneStatus(permissionStatus.state);
+                if (permissionStatus.state === 'denied') {
+                    this.stream = null;
+                    if (this.isRecording) {
+                        this.stopMonitoring();
+                    }
+                }
+            };
+        } catch (error) {
+            console.log('Permission API not supported:', error);
+            this.updateMicrophoneStatus('unknown', 'Microphone status unknown');
+        }
+    }
+
+    updateMicrophoneStatus(state, customMessage = null) {
+        const statusEl = document.getElementById('microphone-status');
+        const statusText = statusEl?.querySelector('.status-text');
+        
+        if (!statusEl || !statusText) return;
+        
+        // Remove existing status classes
+        statusEl.classList.remove('granted', 'denied', 'prompt', 'unknown');
+        
+        switch (state) {
+            case 'granted':
+                statusEl.classList.add('granted');
+                statusText.textContent = customMessage || 'Microphone access granted';
+                break;
+            case 'denied':
+                statusEl.classList.add('denied');
+                statusText.textContent = customMessage || 'Microphone access denied';
+                break;
+            case 'prompt':
+                statusEl.classList.add('prompt');
+                statusText.textContent = customMessage || 'Microphone permission required';
+                break;
+            default:
+                statusEl.classList.add('unknown');
+                statusText.textContent = customMessage || 'Checking microphone...';
+        }
+    }
+
     async requestMicrophonePermission() {
         try {
-            this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    sampleRate: 44100
+                }
+            });
+            this.updateMicrophoneStatus('granted', 'Microphone ready');
             this.hideModal();
             this.startMonitoring();
         } catch (error) {
             console.error('Microphone permission denied:', error);
+            this.updateMicrophoneStatus('denied', 'Microphone access denied');
             this.hideModal();
-            this.showError('Microphone access is required for monitoring.');
+            this.showError('Microphone access is required for monitoring. Please allow microphone access and try again.');
         }
     }
 
@@ -494,10 +574,33 @@ class SnoreTrackerApp {
 
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.analyser = this.audioContext.createAnalyser();
+        
+        // Create audio processing chain for better snore detection
         const source = this.audioContext.createMediaStreamSource(this.stream);
-        source.connect(this.analyser);
+        
+        // Add a low-pass filter to focus on snoring frequencies (typically 20-300 Hz)
+        const lowPassFilter = this.audioContext.createBiquadFilter();
+        lowPassFilter.type = 'lowpass';
+        lowPassFilter.frequency.setValueAtTime(300, this.audioContext.currentTime);
+        lowPassFilter.Q.setValueAtTime(1, this.audioContext.currentTime);
+        
+        // Add a high-pass filter to remove very low frequency noise
+        const highPassFilter = this.audioContext.createBiquadFilter();
+        highPassFilter.type = 'highpass';
+        highPassFilter.frequency.setValueAtTime(20, this.audioContext.currentTime);
+        highPassFilter.Q.setValueAtTime(1, this.audioContext.currentTime);
+        
+        // Connect the audio chain
+        source.connect(highPassFilter);
+        highPassFilter.connect(lowPassFilter);
+        lowPassFilter.connect(this.analyser);
 
-        this.analyser.fftSize = 256;
+        // Improved analyzer settings for better frequency resolution
+        this.analyser.fftSize = 512;
+        this.analyser.smoothingTimeConstant = 0.8;
+        this.analyser.minDecibels = -90;
+        this.analyser.maxDecibels = -10;
+        
         const bufferLength = this.analyser.frequencyBinCount;
         this.dataArray = new Uint8Array(bufferLength);
     }
@@ -538,32 +641,50 @@ class SnoreTrackerApp {
     detectSnoring(volume) {
         const threshold = this.settings.volumeThreshold * (this.settings.sensitivity / 10);
         
+        // Enhanced snoring detection with frequency analysis
         if (volume > threshold) {
-            const now = new Date();
-            const lastEvent = this.sessionData.snoreEvents[this.sessionData.snoreEvents.length - 1];
+            // Analyze frequency content for better snore detection
+            const frequencyData = new Uint8Array(this.analyser.frequencyBinCount);
+            this.analyser.getByteFrequencyData(frequencyData);
             
-            // Check if this is a continuation of the last event or a new one
-            if (!lastEvent || (now - lastEvent.endTime) > 5000) { // 5 second gap
-                this.sessionData.snoreEvents.push({
-                    startTime: now,
-                    endTime: now,
-                    peakVolume: volume,
-                    avgVolume: volume
-                });
-            } else {
-                // Update existing event
-                lastEvent.endTime = now;
-                lastEvent.peakVolume = Math.max(lastEvent.peakVolume, volume);
-                lastEvent.avgVolume = (lastEvent.avgVolume + volume) / 2;
-            }
+            // Focus on snoring frequency range (20-300 Hz)
+            // With 512 FFT size and 44.1kHz sample rate, each bin is ~86 Hz
+            const snoreFreqBins = frequencyData.slice(0, 4); // Roughly 0-344 Hz
+            const snoreEnergy = snoreFreqBins.reduce((sum, val) => sum + val, 0) / snoreFreqBins.length;
+            
+            // Only trigger if there's significant energy in snoring frequencies
+            if (snoreEnergy > 30) { // Threshold for frequency content
+                const now = new Date();
+                const lastEvent = this.sessionData.snoreEvents[this.sessionData.snoreEvents.length - 1];
+                
+                // Check if this is a continuation of the last event or a new one
+                if (!lastEvent || (now - lastEvent.endTime) > 5000) { // 5 second gap
+                    this.sessionData.snoreEvents.push({
+                        startTime: now,
+                        endTime: now,
+                        peakVolume: volume,
+                        avgVolume: volume,
+                        frequencyEnergy: snoreEnergy
+                    });
+                } else {
+                    // Update existing event
+                    lastEvent.endTime = now;
+                    lastEvent.peakVolume = Math.max(lastEvent.peakVolume, volume);
+                    lastEvent.avgVolume = (lastEvent.avgVolume + volume) / 2;
+                    lastEvent.frequencyEnergy = Math.max(lastEvent.frequencyEnergy || 0, snoreEnergy);
+                }
 
-            // Update UI indicator
-            const light = document.querySelector('.indicator-light');
-            if (light) {
-                light.classList.add('active');
-                setTimeout(() => {
-                    light.classList.remove('active');
-                }, 1000);
+                // Update UI indicator with intensity based on frequency energy
+                const light = document.querySelector('.indicator-light');
+                if (light) {
+                    light.classList.add('active');
+                    // Vary indicator intensity based on snore strength
+                    light.style.opacity = Math.min(1, snoreEnergy / 100);
+                    setTimeout(() => {
+                        light.classList.remove('active');
+                        light.style.opacity = '';
+                    }, 1000);
+                }
             }
         }
     }

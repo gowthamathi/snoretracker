@@ -945,6 +945,47 @@ select.form-control {
   margin-bottom: var(--space-20);
 }
 
+.microphone-status {
+  text-align: center;
+  margin-bottom: var(--space-20);
+  padding: var(--space-12);
+  background: var(--color-bg-3);
+  border-radius: var(--radius-base);
+  border: 1px solid var(--color-border);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+}
+
+.mic-icon {
+  font-size: var(--font-size-lg);
+}
+
+.status-text {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.microphone-status.granted {
+  background: var(--color-bg-3);
+  border-color: var(--color-success);
+}
+
+.microphone-status.denied {
+  background: var(--color-bg-4);
+  border-color: var(--color-error);
+}
+
+.microphone-status.prompt {
+  background: var(--color-bg-2);
+  border-color: var(--color-warning);
+}
+
 .waveform-container {
   display: flex;
   justify-content: center;
